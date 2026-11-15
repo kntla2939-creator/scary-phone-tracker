@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090909">
+<title>SCARY TRACKER LIVE</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090909;color:#f4f4f4;font:15px Arial,sans-serif;min-height:100vh;display:grid;place-items:center;padding:18px}
+main{width:min(100%,460px);background:#121212;border:1px solid #792020;border-radius:18px;padding:24px;box-shadow:0 12px 45px #0009}
+.brand{text-align:center;color:#ff4242;font-size:12px;letter-spacing:4px;font-weight:bold}
+h1{text-align:center;font-size:25px;margin:10px 0}.desc{text-align:center;color:#aaa;font-size:13px;line-height:1.5}
+.notice{background:#211414;border:1px solid #633030;border-radius:10px;padding:13px;font-size:12px;line-height:1.5;color:#f0caca;margin:20px 0}
+button{width:100%;padding:14px;border:0;border-radius:9px;background:#bd1717;color:white;font-weight:bold;letter-spacing:1px;font-size:14px;margin-top:10px}
+button.secondary{background:#292929;border:1px solid #555}
+button:disabled{opacity:.5}
+#status{margin-top:16px;color:#ffb0b0;font-size:13px;line-height:1.5}
+.data{display:none;margin-top:18px;background:#1a1a1a;border-radius:10px;padding:14px}
+.row{padding:10px 0;border-bottom:1px solid #333}.row:last-child{border:0}
+.k{font-size:11px;color:#999;margin-bottom:5px}.v{overflow-wrap:anywhere;font-size:14px}
+a{color:#ff7777}
+footer{text-align:center;color:#777;font-size:11px;margin-top:20px}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">SCARY TOOLS</div>
+<h1>TRACKER LIVE</h1>
+<p class="desc">Berbagi lokasi secara sadar dan atas persetujuan pemilik perangkat.</p>
+<div class="notice"><b>Privasi:</b> Lokasi hanya diambil setelah tombol ditekan dan izin browser diberikan. Halaman demo ini tidak mengirim atau menyimpan koordinat ke Firebase maupun server.</div>
+<button id="start">IZINKAN & TAMPILKAN LOKASI SAYA</button>
+<button id="stop" class="secondary" disabled>BERHENTI</button>
+<div id="status" role="status">Belum ada lokasi yang dibagikan.</div>
+<section class="data" id="data">
+<div class="row"><div class="k">LATITUDE</div><div class="v" id="lat">-</div></div>
+<div class="row"><div class="k">LONGITUDE</div><div class="v" id="lon">-</div></div>
+<div class="row"><div class="k">AKURASI PERKIRAAN</div><div class="v" id="acc">-</div></div>
+<div class="row"><div class="k">WAKTU PEMBARUAN</div><div class="v" id="time">-</div></div>
+<div class="row"><a id="map" target="_blank" rel="noopener">Buka titik di peta</a></div>
+</section>
+<footer>DEMO LOKASI BERBASIS IZIN PERANGKAT</footer>
+</main>
+<script>
+let watchId=null;
+const start=document.getElementById('start'), stop=document.getElementById('stop');
+const statusEl=document.getElementById('status'), data=document.getElementById('data');
+function show(pos){
+ const c=pos.coords, lat=c.latitude, lon=c.longitude;
+ document.getElementById('lat').textContent=lat.toFixed(6);
+ document.getElementById('lon').textContent=lon.toFixed(6);
+ document.getElementById('acc').textContent=Math.round(c.accuracy)+' meter (perkiraan)';
+ document.getElementById('time').textContent=new Date(pos.timestamp).toLocaleString('id-ID');
+ document.getElementById('map').href='https://www.google.com/maps?q='+lat+','+lon;
+ data.style.display='block';statusEl.textContent='Lokasi perangkat ini berhasil dibaca. Tidak ada koordinat yang dikirim ke pihak lain.';
+}
+start.onclick=()=>{
+ if(!navigator.geolocation){statusEl.textContent='Browser ini tidak mendukung geolokasi.';return;}
+ if(!window.isSecureContext){statusEl.textContent='GPS browser memerlukan halaman HTTPS atau localhost. Unggah file ini ke hosting HTTPS untuk menguji.';return;}
+ start.disabled=true;stop.disabled=false;statusEl.textContent='Meminta izin lokasi perangkat...';
+ watchId=navigator.geolocation.watchPosition(show,e=>{
+  statusEl.textContent=e.code===1?'Izin lokasi ditolak. Tidak ada lokasi yang dibaca.':'Lokasi tidak tersedia. Periksa GPS dan izin browser.';
+  start.disabled=false;stop.disabled=true;
+ },{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+};
+stop.onclick=()=>{
+ if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+ watchId=null;start.disabled=false;stop.disabled=true;
+ statusEl.textContent='Berbagi lokasi dihentikan. Halaman tidak lagi memperbarui koordinat.';
+};
+</script>
+</body>
+</html>
